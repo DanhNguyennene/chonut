@@ -9,7 +9,7 @@
 [![PyPI](https://img.shields.io/pypi/v/donut-python?color=green&label=pip%20install%20donut-python)](https://pypi.org/project/donut-python)
 [![Downloads](https://static.pepy.tech/personalized-badge/donut-python?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/donut-python)
 
-Official Implementation of Donut [DONUT](https://github.com/clovaai/donut)
+Chart extraction Implementation using Donut [DONUT](https://github.com/clovaai/donut)
 
 # This is the implementation of chart extraciton task usinig DONUT architecture
 
