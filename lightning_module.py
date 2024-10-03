@@ -47,7 +47,7 @@ class DonutModelPLModule(pl.LightningModule):
         print("DEBUG: DonutModelPLModule initialized")
 
     def training_step(self, batch, batch_idx):
-        print("DEBUG: Entering training_step")
+        # print("DEBUG: Entering training_step")
         # Unpack the batch
         image_tensors, decoder_input_ids, decoder_labels = zip(*batch)
         image_tensors = image_tensors[0]
@@ -60,7 +60,7 @@ class DonutModelPLModule(pl.LightningModule):
 
         # Calculate loss
         loss = self.model(image_tensors, decoder_input_ids, decoder_labels)[0]
-        print("DEBUG: Training step loss calculated")
+        # print("DEBUG: Training step loss calculated")
 
         # Log the loss
         self.log_dict({"train_loss": loss}, sync_dist=True)
@@ -70,13 +70,13 @@ class DonutModelPLModule(pl.LightningModule):
         return loss
 
     def on_validation_epoch_start(self):
-        print("DEBUG: Validation epoch started")
+        # print("DEBUG: Validation epoch started")
         super().on_validation_epoch_start()
         self.validation_step_outputs = [[] for _ in range(self.num_of_loaders)]
         return
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        print("DEBUG: Entering validation_step")
+        # print("DEBUG: Entering validation_step")
         image_tensors, decoder_input_ids, prompt_end_idxs, answers = batch
         decoder_prompts = pad_sequence(
             [input_id[: end_idx + 1] for input_id, end_idx in zip(decoder_input_ids, prompt_end_idxs)],
@@ -103,7 +103,7 @@ class DonutModelPLModule(pl.LightningModule):
                 print(f"DEBUG: Normalized Edit Distance: {scores[0]}")
 
         self.validation_step_outputs[dataloader_idx].append(scores)
-        print("DEBUG: Validation step completed")
+        # print("DEBUG: Validation step completed")
 
         return scores
 
