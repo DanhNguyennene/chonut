@@ -10,8 +10,11 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/donut-python?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/donut-python)
 
 Official Implementation of Donut [DONUT](https://github.com/clovaai/donut)
-</div>
+
 # This is the implementation of chart extraciton task usinig DONUT architecture
+
+</div>
+
 
 
 
