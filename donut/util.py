@@ -143,7 +143,7 @@ class DonutDataset(Dataset):
         return self.dataset_length
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        print("DEBUG: __getitem__ called with index:", idx)
+        # print("DEBUG: __getitem__ called with index:", idx)
         sample = self.dataset[idx]
 
         # input_tensor
@@ -157,7 +157,7 @@ class DonutDataset(Dataset):
             truncation=True,
             return_tensors="pt",
         )["input_ids"].squeeze(0)
-        print("DEBUG: Input IDs created")
+        # print("DEBUG: Input IDs created")
         '''
         # Chunk input_ids into smaller pieces
         input_chunks = self._chunk_input_ids(input_ids)
@@ -194,7 +194,7 @@ class DonutDataset(Dataset):
 
     def _chunk_input_ids(self, input_ids):
         """Chunk input_ids into smaller sequences based on max_length."""
-        print("DEBUG: Entering _chunk_input_ids")
+        # print("DEBUG: Entering _chunk_input_ids")
         input_chunks = []
         for i in range(0, len(input_ids), self.max_length):
             chunk = input_ids[i: i + self.max_length]
@@ -202,7 +202,7 @@ class DonutDataset(Dataset):
                 padding_length = self.max_length - len(chunk)
                 chunk = torch.cat([chunk, torch.full((padding_length,), self.donut_model.decoder.tokenizer.pad_token_id)])
             input_chunks.append(chunk)
-        print(f"DEBUG: Created {len(input_chunks)} input chunks")
+        # print(f"DEBUG: Created {len(input_chunks)} input chunks")
         return input_chunks
 class JSONParseEvaluator:
     """
