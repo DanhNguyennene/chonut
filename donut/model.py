@@ -282,7 +282,7 @@ class BARTDecoder(nn.Module):
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss(ignore_index=-100)
-            loss = loss_fct(logits.view(-1, self.model.config.vocab_size), labels.view(-1))
+            loss = loss_fct(logits.view(-1, self.model.config.vocab_size), labels.reshape(-1))
 
         if not return_dict:
             output = (logits,) + outputs[1:]
