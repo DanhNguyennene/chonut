@@ -20,12 +20,12 @@ from torch.utils.data import DataLoader
 
 from donut import DonutConfig, DonutModel
 
-
 class DonutModelPLModule(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
         self.config = config
 
+        print("DEBUG: Initializing DonutModelPLModule")
         if self.config.get("pretrained_model_name_or_path", False):
             self.model = DonutModel.from_pretrained(
                 self.config.pretrained_model_name_or_path,
@@ -40,34 +40,43 @@ class DonutModelPLModule(pl.LightningModule):
                     input_size=self.config.input_size,
                     max_length=self.config.max_length,
                     align_long_axis=self.config.align_long_axis,
-                    # with DonutConfig, the architecture customization is available, e.g.,
-                    # encoder_layer=[2,2,14,2], decoder_layer=4, ...
                 )
             )
         self.pytorch_lightning_version_is_1 = int(pl.__version__[0]) < 2
         self.num_of_loaders = len(self.config.dataset_name_or_paths)
+        print("DEBUG: DonutModelPLModule initialized")
 
     def training_step(self, batch, batch_idx):
-        image_tensors, decoder_input_ids, decoder_labels = list(), list(), list()
-        for batch_data in batch:
-            image_tensors.append(batch_data[0])
-            decoder_input_ids.append(batch_data[1][:, :-1])
-            decoder_labels.append(batch_data[2][:, 1:])
-        image_tensors = torch.cat(image_tensors)
-        decoder_input_ids = torch.cat(decoder_input_ids)
-        decoder_labels = torch.cat(decoder_labels)
+        print("DEBUG: Entering training_step")
+        # Unpack the batch
+        image_tensors, decoder_input_ids, decoder_labels = zip(*batch)
+        image_tensors = image_tensors[0]
+        decoder_input_ids = decoder_input_ids[0]
+        decoder_labels = decoder_labels[0]
+
+        # Process input tensors
+        decoder_input_ids = decoder_input_ids[:, :-1]
+        decoder_labels = decoder_labels[:, 1:]
+
+        # Calculate loss
         loss = self.model(image_tensors, decoder_input_ids, decoder_labels)[0]
+        print("DEBUG: Training step loss calculated")
+
+        # Log the loss
         self.log_dict({"train_loss": loss}, sync_dist=True)
         if not self.pytorch_lightning_version_is_1:
             self.log('loss', loss, prog_bar=True)
+
         return loss
 
-    def on_validation_epoch_start(self) -> None:
+    def on_validation_epoch_start(self):
+        print("DEBUG: Validation epoch started")
         super().on_validation_epoch_start()
         self.validation_step_outputs = [[] for _ in range(self.num_of_loaders)]
         return
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
+        print("DEBUG: Entering validation_step")
         image_tensors, decoder_input_ids, prompt_end_idxs, answers = batch
         decoder_prompts = pad_sequence(
             [input_id[: end_idx + 1] for input_id, end_idx in zip(decoder_input_ids, prompt_end_idxs)],
@@ -89,15 +98,17 @@ class DonutModelPLModule(pl.LightningModule):
             scores.append(edit_distance(pred, answer) / max(len(pred), len(answer)))
 
             if self.config.get("verbose", False) and len(scores) == 1:
-                self.print(f"Prediction: {pred}")
-                self.print(f"    Answer: {answer}")
-                self.print(f" Normed ED: {scores[0]}")
+                print(f"DEBUG: Prediction: {pred}")
+                print(f"DEBUG: Answer: {answer}")
+                print(f"DEBUG: Normalized Edit Distance: {scores[0]}")
 
         self.validation_step_outputs[dataloader_idx].append(scores)
+        print("DEBUG: Validation step completed")
 
         return scores
 
     def on_validation_epoch_end(self):
+        print("DEBUG: Validation epoch ended")
         assert len(self.validation_step_outputs) == self.num_of_loaders
         cnt = [0] * self.num_of_loaders
         total_metric = [0] * self.num_of_loaders
@@ -110,9 +121,10 @@ class DonutModelPLModule(pl.LightningModule):
             val_metric_name = f"val_metric_{i}th_dataset"
             self.log_dict({val_metric_name: val_metric[i]}, sync_dist=True)
         self.log_dict({"val_metric": np.sum(total_metric) / np.sum(cnt)}, sync_dist=True)
+        print("DEBUG: Validation metrics logged")
 
     def configure_optimizers(self):
-
+        print("DEBUG: Configuring optimizers")
         max_iter = None
 
         if int(self.config.get("max_epochs", -1)) > 0:
@@ -131,10 +143,12 @@ class DonutModelPLModule(pl.LightningModule):
             "name": "learning_rate",
             "interval": "step",
         }
+        print("DEBUG: Optimizers configured")
         return [optimizer], [scheduler]
 
     @staticmethod
     def cosine_scheduler(optimizer, training_steps, warmup_steps):
+        print("DEBUG: Entering cosine_scheduler")
         def lr_lambda(current_step):
             if current_step < warmup_steps:
                 return current_step / max(1, warmup_steps)
@@ -143,14 +157,6 @@ class DonutModelPLModule(pl.LightningModule):
             return max(0.0, 0.5 * (1.0 + math.cos(math.pi * progress)))
 
         return LambdaLR(optimizer, lr_lambda)
-
-    @rank_zero_only
-    def on_save_checkpoint(self, checkpoint):
-        save_path = Path(self.config.result_path) / self.config.exp_name / self.config.exp_version
-        self.model.save_pretrained(save_path)
-        self.model.decoder.tokenizer.save_pretrained(save_path)
-
-
 class DonutDataPLModule(pl.LightningDataModule):
     def __init__(self, config):
         super().__init__()
@@ -161,8 +167,10 @@ class DonutDataPLModule(pl.LightningDataModule):
         self.val_datasets = []
         self.g = torch.Generator()
         self.g.manual_seed(self.config.seed)
+        print("DEBUG: DonutDataPLModule initialized")
 
     def train_dataloader(self):
+        print("DEBUG: Creating train dataloader")
         loaders = list()
         for train_dataset, batch_size in zip(self.train_datasets, self.train_batch_sizes):
             loaders.append(
@@ -174,11 +182,14 @@ class DonutDataPLModule(pl.LightningDataModule):
                     worker_init_fn=self.seed_worker,
                     generator=self.g,
                     shuffle=True,
+                    # collate_fn=custom_collate_fn,
                 )
             )
+        print("DEBUG: Train dataloaders created")
         return loaders
 
     def val_dataloader(self):
+        print("DEBUG: Creating validation dataloader")
         loaders = list()
         for val_dataset, batch_size in zip(self.val_datasets, self.val_batch_sizes):
             loaders.append(
@@ -187,12 +198,17 @@ class DonutDataPLModule(pl.LightningDataModule):
                     batch_size=batch_size,
                     pin_memory=True,
                     shuffle=False,
+                    # collate_fn=custom_collate_fn,
                 )
             )
+        print("DEBUG: Validation dataloaders created")
         return loaders
 
     @staticmethod
-    def seed_worker(wordker_id):
+    def seed_worker(worker_id):
         worker_seed = torch.initial_seed() % 2 ** 32
         np.random.seed(worker_seed)
         random.seed(worker_seed)
+        print(f"DEBUG: Seed worker initialized with worker_id: {worker_id}")
+
+
