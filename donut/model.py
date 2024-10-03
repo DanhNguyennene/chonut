@@ -52,6 +52,7 @@ class SwinEncoder(nn.Module):
         self.align_long_axis = align_long_axis
         self.window_size = window_size
         self.encoder_layer = encoder_layer
+        self.pos_drop = nn.Dropout(p=0.1)
 
         self.to_tensor = transforms.Compose(
             [
