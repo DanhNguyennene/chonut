@@ -98,9 +98,9 @@ class DonutModelPLModule(pl.LightningModule):
             scores.append(edit_distance(pred, answer) / max(len(pred), len(answer)))
 
             if self.config.get("verbose", False) and len(scores) == 1:
-                # print(f"DEBUG: Prediction: {pred}")
-                # print(f"DEBUG: Answer: {answer}")
-                # print(f"DEBUG: Normalized Edit Distance: {scores[0]}")
+                print(f"DEBUG: Prediction: {pred}")
+                print(f"DEBUG: Answer: {answer}")
+                print(f"DEBUG: Normalized Edit Distance: {scores[0]}")
 
         self.validation_step_outputs[dataloader_idx].append(scores)
         # print("DEBUG: Validation step completed")
