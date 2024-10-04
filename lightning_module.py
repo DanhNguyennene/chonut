@@ -98,6 +98,9 @@ class DonutModelPLModule(pl.LightningModule):
             scores.append(edit_distance(pred, answer) / max(len(pred), len(answer)))
 
             if self.config.get("verbose", False) and len(scores) == 1:
+                self.log_dict({"Prediction": pred}, sync_dist=True)
+                self.log_dict({"Answer": answer}, sync_dist=True)
+                self.log_dict({"Normalized": scores[0]}, sync_dist=True)
                 print(f"DEBUG: Prediction: {pred}")
                 print(f"DEBUG: Answer: {answer}")
                 print(f"DEBUG: Normalized Edit Distance: {scores[0]}")
@@ -157,6 +160,20 @@ class DonutModelPLModule(pl.LightningModule):
             return max(0.0, 0.5 * (1.0 + math.cos(math.pi * progress)))
 
         return LambdaLR(optimizer, lr_lambda)
+
+    def get_progress_bar_dict(self):
+        items = super().get_progress_bar_dict()
+        items.pop("v_num", None)
+        items["exp_name"] = f"{self.config.get('exp_name', '')}"
+        items["exp_version"] = f"{self.config.get('exp_version', '')}"
+        return items
+
+    @rank_zero_only
+    def on_save_checkpoint(self, checkpoint):
+        save_path = Path(self.config.result_path) / self.config.exp_name / self.config.exp_version
+        self.model.save_pretrained(save_path)
+        self.model.decoder.tokenizer.save_pretrained(save_path)
+
 class DonutDataPLModule(pl.LightningDataModule):
     def __init__(self, config):
         super().__init__()
