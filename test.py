@@ -19,7 +19,7 @@ from donut import DonutModel, JSONParseEvaluator, load_json, save_json
 
 
 def test(args):
-    pretrained_model = DonutModel.from_pretrained(args.pretrained_model_name_or_path)
+    pretrained_model = DonutModel.from_pretrained(args.pretrained_model_name_or_path,ignore_mismatched_sizes=True)
 
     if torch.cuda.is_available():
         pretrained_model.half()
