@@ -208,7 +208,7 @@ class BARTDecoder(nn.Module):
         if newly_added_num > 0:
             self.model.resize_token_embeddings(len(self.tokenizer))
 
-    def prepare_inputs_for_inference(self, input_ids: torch.Tensor, encoder_outputs: torch.Tensor, past_key_values=None, past=None, use_cache: bool = None, attention_mask: torch.Tensor = None):
+    def prepare_inputs_for_inference(self, input_ids: torch.Tensor, encoder_outputs: torch.Tensor, past_key_values=None, past=None, use_cache: bool = None, attention_mask: torch.Tensor = None, cache_position=None):
         """
         Args:
             input_ids: (batch_size, sequence_lenth)
