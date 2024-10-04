@@ -98,9 +98,9 @@ class DonutModelPLModule(pl.LightningModule):
             scores.append(edit_distance(pred, answer) / max(len(pred), len(answer)))
 
             if self.config.get("verbose", False) and len(scores) == 1:
-                self.log_dict({"Prediction": pred}, sync_dist=True)
-                self.log_dict({"Answer": answer}, sync_dist=True)
-                self.log_dict({"Normalized": scores[0]}, sync_dist=True)
+                # self.log_dict({"Prediction": pred}, sync_dist=True)
+                # self.log_dict({"Answer": answer}, sync_dist=True)
+                # self.log_dict({"Normalized": scores[0]}, sync_dist=True)
                 print(f"DEBUG: Prediction: {pred}")
                 print(f"DEBUG: Answer: {answer}")
                 print(f"DEBUG: Normalized Edit Distance: {scores[0]}")
