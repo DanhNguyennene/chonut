@@ -474,7 +474,7 @@ class DonutModel(PreTrainedModel):
             early_stopping=True,
             pad_token_id=self.decoder.tokenizer.pad_token_id,
             eos_token_id=self.decoder.tokenizer.eos_token_id,
-            use_cache=True,
+            use_cache=False,
             num_beams=1,
             bad_words_ids=[[self.decoder.tokenizer.unk_token_id]],
             return_dict_in_generate=True,
