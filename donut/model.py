@@ -396,6 +396,8 @@ class DonutModel(PreTrainedModel):
             decoder_layer=self.config.decoder_layer,
             name_or_path=self.config.name_or_path,
         )
+    def _init_weights(self,Module):
+        pass
 
     def forward(self, image_tensors: torch.Tensor, decoder_input_ids: torch.Tensor, decoder_labels: torch.Tensor):
         """
