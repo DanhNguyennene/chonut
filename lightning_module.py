@@ -83,6 +83,7 @@ class DonutModelPLModule(pl.LightningModule):
             batch_first=True,
         )
 
+        print("DEBUG: decoder_prompts", decoder_prompts)
         preds = self.model.inference(
             image_tensors=image_tensors,
             prompt_tensors=decoder_prompts,
